@@ -1,14 +1,13 @@
-import { Router, Request, Response } from 'express';
-import { FeedItem } from '../models/FeedItem';
-import { requireAuth } from '../../users/routes/auth.router';
-import * as AWS from '../../../../aws';
-import { strict } from 'assert';
+import { Router, Request, Response } from "express";
+import { FeedItem } from "../models/FeedItem";
+import { requireAuth } from "../../users/routes/auth.router";
+import * as AWS from "../../../../aws";
 
 const router: Router = Router();
 
 // Get all feed items
-router.get('/', async (req: Request, res: Response) => {
-  const items = await FeedItem.findAndCountAll({ order: [['id', 'DESC']] });
+router.get("/", async (req: Request, res: Response) => {
+  const items = await FeedItem.findAndCountAll({ order: [["id", "DESC"]] });
   items.rows.map((item) => {
     if (item.url) {
       item.url = AWS.getGetSignedUrl(item.url);
@@ -19,26 +18,26 @@ router.get('/', async (req: Request, res: Response) => {
 
 //@TODO
 //Add an endpoint to GET a specific resource by Primary Key
-router.get('/:id', async (req: Request, res: Response) => {
+router.get("/:id", async (req: Request, res: Response) => {
   const item = await FeedItem.findByPk(req.params.id);
   res.send(item);
 });
 
 // update a specific resource
-router.patch('/:id', requireAuth, async (req: Request, res: Response) => {
+router.patch("/:id", requireAuth, async (req: Request, res: Response) => {
   //@TODO try it yourself
   const id = req.params.id;
   try {
     await FeedItem.update({ ...req.body }, { where: { id } });
     res.status(201).send(req.body);
   } catch (error) {
-    res.status(500).send('not implemented');
+    res.status(500).send("not implemented");
   }
 });
 
 // Get a signed url to put a new item in the bucket
 router.get(
-  '/signed-url/:fileName',
+  "/signed-url/:fileName",
   requireAuth,
   async (req: Request, res: Response) => {
     let { fileName } = req.params;
@@ -50,7 +49,7 @@ router.get(
 // Post meta data and the filename after a file is uploaded
 // NOTE the file name is they key name in the s3 bucket.
 // body : {caption: string, fileName: string};
-router.post('/', requireAuth, async (req: Request, res: Response) => {
+router.post("/", requireAuth, async (req: Request, res: Response) => {
   const caption = req.body.caption;
   const fileName = req.body.url;
 
@@ -58,12 +57,12 @@ router.post('/', requireAuth, async (req: Request, res: Response) => {
   if (!caption) {
     return res
       .status(400)
-      .send({ message: 'Caption is required or malformed' });
+      .send({ message: "Caption is required or malformed" });
   }
 
   // check Filename is valid
   if (!fileName) {
-    return res.status(400).send({ message: 'File url is required' });
+    return res.status(400).send({ message: "File url is required" });
   }
 
   const item = await new FeedItem({
